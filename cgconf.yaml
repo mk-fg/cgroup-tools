@@ -1,0 +1,29 @@
+path: /sys/fs/cgroup
+
+defaults:
+	_tasks: root:wheel:664
+	_admin: root:wheel:644
+	freezer:
+
+groups:
+
+	base:
+		_default: true
+		cpu.shares: 1000
+		blkio.weight: 1000
+
+	tagged:
+		cave:
+			_tasks: root:paludisbuild
+			_admin: root:paludisbuild
+			cpu.shares: 100
+			blkio.weight: 100
+		desktop:
+			roam:
+				_tasks: root:users
+				cpu.shares: 300
+				blkio.weight: 300
+			java:
+				_tasks: root:users
+				cpu.shares: 100
+				blkio.weight: 100
