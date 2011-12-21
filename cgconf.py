@@ -49,12 +49,16 @@ def init_rc(rc, rc_path):
 		log.debug('Found mounts: {}'.format(_mounts))
 
 	if mkdir_chk or rc_path not in _mounts:
-		mount_cmd = 'mount', '-t', 'cgroup', '-o', rc, rc, rc_path
-		log.debug('Mounting rc path: {} ({})'.format(rc_path, ' '.join(mount_cmd)))
-		if not argz.dry_run:
-			if Popen(mount_cmd).wait():
-				raise RuntimeError( 'Failed to mount'
-					' rc path: {}, command: {}'.format(rc_path, mount_cmd) )
+		if os.path.islink(rc_path):
+			log.debug(( 'Symlink in place of rc-path (rc: {}),'
+				' skipping (assuming hack or joint mount): {}' ).format(rc, rc_path))
+		else:
+			mount_cmd = 'mount', '-t', 'cgroup', '-o', rc, rc, rc_path
+			log.debug('Mounting rc path: {} ({})'.format(rc_path, ' '.join(mount_cmd)))
+			if not argz.dry_run:
+				if Popen(mount_cmd).wait():
+					raise RuntimeError( 'Failed to mount'
+						' rc path: {}, command: {}'.format(rc_path, mount_cmd) )
 		_mounts.add(rc_path)
 
 
@@ -156,7 +160,8 @@ def settings_for_rc(rc, settings):
 		for k,v in settings.viewitems() )
 
 def path_for_rc(rc, name):
-	return name if rc != 'blkio' else name.replace('/', '.')
+	return name # blkio is pseudo-hierarhical these days
+	# return name if rc != 'blkio' else name.replace('/', '.')
 
 def parse_cg(name='', contents=dict()):
 	global _default_rcs
@@ -171,7 +176,7 @@ def parse_cg(name='', contents=dict()):
 
 	log.debug('Processing group {}'.format(name or '(root)'))
 	if name.endswith('_') or not contents\
-			or filter(lambda k: k.startswith('_'), contents):
+			or filter(lambda k: k.startswith('_') or '.' in k, contents):
 		name = name.rstrip('_')
 		contents = settings_inline(contents.viewitems())
 
@@ -203,8 +208,10 @@ def parse_cg(name='', contents=dict()):
 				log.debug('Populating default cgroup: {}'.format(cg_path))
 				if not argz.dry_run:
 					read_pids = lambda path: (int(line.strip()) for line in open(join(path, 'tasks')))
-					pids = set(read_pids(rc_path) if not argz.reset else it.chain.from_iterable(
-						read_pids(root) for root,dirs,files in os.walk(rc_path) if 'tasks' in files and root != cg_path ))
+					pids = set( read_pids(rc_path)
+						if not argz.reset else it.chain.from_iterable(
+							read_pids(root) for root,dirs,files in os.walk(rc_path)
+							if 'tasks' in files and root != cg_path ) )
 					classify(cg_path, pids)
 				_default_cg = name
 
