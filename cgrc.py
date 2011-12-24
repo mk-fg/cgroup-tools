@@ -9,7 +9,7 @@ from __future__ import unicode_literals, print_function
 #  cgrc.group cmd...
 
 cgname_tpl = 'tagged/{}' # template for cgroup path
-tasks = '/sys/fs/cgroup/*/{}/tasks' # path to resource controllers' pseudo-fs'es
+tasks = '/sys/fs/cgroup/*/{}/cgroup.procs' # path to resource controllers' pseudo-fs'es
 
 import os, sys
 

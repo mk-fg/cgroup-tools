@@ -3,9 +3,12 @@
 from __future__ import unicode_literals, print_function
 
 import argparse
-parser = argparse.ArgumentParser(description='Put/take specified cgroup(s) to/from freezer.')
-parser.add_argument('-u', '--unfreeze', action='store_true', help='Unfreeze the cgroup(s).')
-parser.add_argument('-c', '--check', action='store_true', help='Just get the state of a specified cgroup(s).')
+parser = argparse.ArgumentParser(
+	description='Put/ specified cgroup(s) in/out-of the freezer.')
+parser.add_argument('-u', '--unfreeze',
+	action='store_true', help='Unfreeze the cgroup(s).')
+parser.add_argument('-c', '--check',
+	action='store_true', help='Just get the state of a specified cgroup(s).')
 parser.add_argument('cgroups', nargs='+', help='Cgroup(s) to operate on.')
 argz = parser.parse_args()
 

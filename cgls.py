@@ -3,7 +3,8 @@
 from __future__ import unicode_literals, print_function
 
 import argparse
-parser = argparse.ArgumentParser(description='List PIDs, belonging to a specified cgroups.')
+parser = argparse.ArgumentParser(
+	description='List pids (tgids), belonging to a specified cgroups.')
 parser.add_argument('cgroups', nargs='+', help='Cgroup(s) to operate on.')
 argz = parser.parse_args()
 
@@ -19,7 +20,7 @@ pids = set()
 listdirs = lambda path: it.ifilter( isdir,
 	it.imap(ft.partial(join, path), os.listdir(path)) )
 collect_pids = lambda path:\
-	pids.update(int(line.strip()) for line in open(join(path, 'tasks')))
+	pids.update(int(line.strip()) for line in open(join(path, 'cgroup.procs')))
 
 def collect_pids_recurse(path):
 	collect_pids(path)

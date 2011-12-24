@@ -115,8 +115,9 @@ def configure(path, settings, perms):
 				ft.partial(join, path), os.listdir(path) )):
 			os.chown(node, *perms[1][:2])
 			os.chmod(node, perms[1][2])
-		os.chown(join(path, 'tasks'), *perms[0][:2])
-		os.chmod(join(path, 'tasks'), perms[0][2])
+		for fn in 'tasks', 'cgroup.procs':
+			os.chown(join(path, fn), *perms[0][:2])
+			os.chmod(join(path, fn), perms[0][2])
 
 	log.debug('Configuring {}: {}'.format(path, settings))
 	if not argz.dry_run:
@@ -130,7 +131,7 @@ def classify(cg_path, tasks):
 		for task in tasks:
 			try:
 				if not open('/proc/{}/cmdline'.format(task)).read(): continue # kernel thread
-				with open(join(cg_path, 'tasks'), 'wb') as ctl: ctl.write(b'{}\n'.format(task))
+				with open(join(cg_path, 'cgroup.procs'), 'wb') as ctl: ctl.write(b'{}\n'.format(task))
 			except (OSError, IOError): pass # most likely dead pid
 
 
@@ -207,11 +208,11 @@ def parse_cg(name='', contents=dict()):
 					raise ValueError('There can be only one default cgroup')
 				log.debug('Populating default cgroup: {}'.format(cg_path))
 				if not argz.dry_run:
-					read_pids = lambda path: (int(line.strip()) for line in open(join(path, 'tasks')))
+					read_pids = lambda path: (int(line.strip()) for line in open(join(path, 'cgroup.procs')))
 					pids = set( read_pids(rc_path)
 						if not argz.reset else it.chain.from_iterable(
 							read_pids(root) for root,dirs,files in os.walk(rc_path)
-							if 'tasks' in files and root != cg_path ) )
+							if 'cgroup.procs' in files and root != cg_path ) )
 					classify(cg_path, pids)
 				_default_cg = name
 
