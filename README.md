@@ -9,3 +9,5 @@ TODO
 --------------------
 
 * produce a decent README file
+* check out [peo3/cgroup-utils](https://github.com/peo3/cgroup-utils) and whether I can
+  rebase this stuff on top of it
