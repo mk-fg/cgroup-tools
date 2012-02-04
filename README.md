@@ -1,5 +1,4 @@
-cgroup-tools: a set of tools to work with cgroup tree and processes
-classification/QoS, according to it
+cgroup-tools: a set of tools to work with cgroup tree and processes classification/QoS, according to it
 --------------------
 
 More (quite a bit outdated!) info can be found here:
