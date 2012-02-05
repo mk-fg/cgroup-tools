@@ -18,10 +18,10 @@ parser.add_argument('-r', '--reset', action='store_true',
 	help='Put all processes into a default cgroup, not just non-classified ones.')
 parser.add_argument('-p', '--dry-run', action='store_true', help='Just show what has to be done.')
 parser.add_argument('--debug', action='store_true', help='Verbose operation mode.')
-argz = parser.parse_args()
+optz = parser.parse_args()
 
 import logging
-logging.basicConfig(level=logging.DEBUG if argz.debug else logging.INFO)
+logging.basicConfig(level=logging.DEBUG if optz.debug else logging.INFO)
 log = logging.getLogger()
 
 import itertools as it, operator as op, functools as ft
@@ -39,7 +39,7 @@ def init_rc(rc, rc_path):
 	mkdir_chk = not isdir(join(conf['path'], rc))
 	if mkdir_chk:
 		log.debug('Creating rc path: {}'.format(rc_path))
-		if not argz.dry_run: os.mkdir(rc_path)
+		if not optz.dry_run: os.mkdir(rc_path)
 
 	global _mounts
 	if _mounts is None:
@@ -55,7 +55,7 @@ def init_rc(rc, rc_path):
 		else:
 			mount_cmd = 'mount', '-t', 'cgroup', '-o', rc, rc, rc_path
 			log.debug('Mounting rc path: {} ({})'.format(rc_path, ' '.join(mount_cmd)))
-			if not argz.dry_run:
+			if not optz.dry_run:
 				if Popen(mount_cmd).wait():
 					raise RuntimeError( 'Failed to mount'
 						' rc path: {}, command: {}'.format(rc_path, mount_cmd) )
@@ -110,7 +110,7 @@ def configure(path, settings, perms):
 
 	perms = merge_perms(it.imap(parse_perms, perms), _default_perms)
 	log.debug('Setting permissions for {}: {}'.format(path, perms))
-	if not argz.dry_run:
+	if not optz.dry_run:
 		for node in it.ifilter(isfile, it.imap(
 				ft.partial(join, path), os.listdir(path) )):
 			os.chown(node, *perms[1][:2])
@@ -120,14 +120,14 @@ def configure(path, settings, perms):
 			os.chmod(join(path, fn), perms[0][2])
 
 	log.debug('Configuring {}: {}'.format(path, settings))
-	if not argz.dry_run:
+	if not optz.dry_run:
 		for node, val in settings.viewitems():
 			val = interpret_val(val)
 			open(join(path, node), 'wb').write(b'{}\n'.format(val))
 
 
 def classify(cg_path, tasks):
-	if not argz.dry_run:
+	if not optz.dry_run:
 		for task in tasks:
 			try:
 				if not open('/proc/{}/cmdline'.format(task)).read(): continue # kernel thread
@@ -195,7 +195,7 @@ def parse_cg(name='', contents=dict()):
 			cg_path = join(rc_path, rc_name)
 			if not isdir(cg_path):
 				log.debug('Creating cgroup path: {}'.format(cg_path))
-				if not argz.dry_run:
+				if not optz.dry_run:
 					cg_base = rc_path
 					for slug in rc_name.split('/'):
 						cg_base = join(cg_base, slug)
@@ -207,10 +207,10 @@ def parse_cg(name='', contents=dict()):
 				if _default_cg is not None and _default_cg != name:
 					raise ValueError('There can be only one default cgroup')
 				log.debug('Populating default cgroup: {}'.format(cg_path))
-				if not argz.dry_run:
+				if not optz.dry_run:
 					read_pids = lambda path: (int(line.strip()) for line in open(join(path, 'cgroup.procs')))
 					pids = set( read_pids(rc_path)
-						if not argz.reset else it.chain.from_iterable(
+						if not optz.reset else it.chain.from_iterable(
 							read_pids(root) for root,dirs,files in os.walk(rc_path)
 							if 'cgroup.procs' in files and root != cg_path ) )
 					classify(cg_path, pids)
@@ -221,5 +221,5 @@ def parse_cg(name='', contents=dict()):
 			parse_cg(join(name, subname), contents)
 
 
-conf = yaml.load(open(conf).read().replace('\t', '  '))
+conf = yaml.load(open(optz.conf).read().replace('\t', '  '))
 parse_cg(contents=conf['groups'])
