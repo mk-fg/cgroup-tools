@@ -36,7 +36,7 @@ _default_perms = _default_rcs = _default_cg = _mounts = None
 def init_rc(rc, rc_path):
 	log.debug('Initializing path for rc ({}): {}'.format(rc, rc_path))
 
-	mkdir_chk = not isdir(join(conf['path'], rc))
+	mkdir_chk = not isdir(rc_path)
 	if mkdir_chk:
 		log.debug('Creating rc path: {}'.format(rc_path))
 		if not optz.dry_run: os.mkdir(rc_path)
@@ -44,8 +44,9 @@ def init_rc(rc, rc_path):
 	global _mounts
 	if _mounts is None:
 		_mounts = set(it.imap(op.itemgetter(4), it.ifilter(
-			lambda line: line[7] == 'cgroup', it.imap(
-				op.methodcaller('split'), open('/proc/self/mountinfo') ))))
+			lambda line: (line[7] == 'cgroup')\
+					or (line[7] == '-' and line[8] == 'cgroup'),\
+			it.imap(op.methodcaller('split'), open('/proc/self/mountinfo')) )))
 		log.debug('Found mounts: {}'.format(_mounts))
 
 	if mkdir_chk or rc_path not in _mounts:
