@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function
+from __future__ import print_function
 
 ####################
 
@@ -9,20 +9,6 @@ conf = '{}.yaml'.format(os.path.realpath(__file__).rsplit('.', 1)[0])
 
 ####################
 
-
-import argparse
-parser = argparse.ArgumentParser(
-	description='Tool to create cgroup hierarchy and perform a basic tasks classification.')
-parser.add_argument('-c', '--conf', default=conf, help='Configuration file (default: %(default)s).')
-parser.add_argument('-r', '--reset', action='store_true',
-	help='Put all processes into a default cgroup, not just non-classified ones.')
-parser.add_argument('-p', '--dry-run', action='store_true', help='Just show what has to be done.')
-parser.add_argument('--debug', action='store_true', help='Verbose operation mode.')
-optz = parser.parse_args()
-
-import logging
-logging.basicConfig(level=logging.DEBUG if optz.debug else logging.INFO)
-log = logging.getLogger()
 
 import itertools as it, operator as op, functools as ft
 from subprocess import Popen, PIPE, STDOUT
@@ -222,5 +208,24 @@ def parse_cg(name='', contents=dict()):
 			parse_cg(join(name, subname), contents)
 
 
-conf = yaml.load(open(optz.conf).read().replace('\t', '  '))
-parse_cg(contents=conf['groups'])
+def main(args=None):
+	global optz, conf, log
+
+	import argparse
+	parser = argparse.ArgumentParser(
+		description='Tool to create cgroup hierarchy and perform a basic tasks classification.')
+	parser.add_argument('-c', '--conf', default=conf, help='Configuration file (default: %(default)s).')
+	parser.add_argument('-r', '--reset', action='store_true',
+		help='Put all processes into a default cgroup, not just non-classified ones.')
+	parser.add_argument('-p', '--dry-run', action='store_true', help='Just show what has to be done.')
+	parser.add_argument('--debug', action='store_true', help='Verbose operation mode.')
+	optz = parser.parse_args(sys.argv[1:] if args is None else args)
+
+	import logging
+	logging.basicConfig(level=logging.DEBUG if optz.debug else logging.INFO)
+	log = logging.getLogger()
+
+	conf = yaml.load(open(optz.conf).read().replace('\t', '  '))
+	parse_cg(contents=conf['groups'])
+
+if __name__ == '__main__': sys.exit(main())
