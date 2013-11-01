@@ -7,6 +7,10 @@ from __future__ import print_function
 import os, sys
 conf = '{}.yaml'.format(os.path.realpath(__file__).rsplit('.', 1)[0])
 
+valid_rcs = set( line.split()[0]
+	for line in open('/proc/cgroups')
+	if line and not line.startswith('#') )
+
 ####################
 
 
@@ -122,6 +126,12 @@ def classify(cg_path, tasks):
 			except (OSError, IOError): pass # most likely dead pid
 
 
+def is_rc_setting(key):
+	'Returns True if key is a setting for some cgroup variable, False for subpath.'
+	if key in valid_rcs: return True
+	if key and key.split('.', 1)[0] in valid_rcs: return True
+	return False
+
 def settings_inline(rc_dict):
 	rc_inline = dict()
 	for rc,settings in rc_dict:
@@ -164,7 +174,7 @@ def parse_cg(name='', contents=dict()):
 
 	log.debug('Processing group {}'.format(name or '(root)'))
 	if name.endswith('_') or not contents\
-			or filter(lambda k: k.startswith('_') or '.' in k, contents):
+			or filter(lambda k: k.startswith('_') or is_rc_setting(k), contents):
 		name = name.rstrip('_')
 		contents = settings_inline(contents.viewitems())
 
@@ -206,6 +216,7 @@ def parse_cg(name='', contents=dict()):
 	else:
 		for subname, contents in contents.viewitems():
 			parse_cg(join(name, subname), contents)
+
 
 
 def main(args=None):
