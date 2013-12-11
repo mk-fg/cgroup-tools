@@ -168,6 +168,10 @@ def path_for_rc(rc, name):
 	# return name if rc != 'blkio' else name.replace('/', '.')
 
 def parse_cg(name='', contents=dict()):
+	if name and name.rsplit('/', 1)[-1].startswith('_'):
+		log.debug('Skipping special (prefixed) section: {}'.format(name))
+		return
+
 	global _default_rcs
 	if _default_rcs is None:
 		_default_rcs = settings_inline(it.ifilter(
@@ -177,18 +181,24 @@ def parse_cg(name='', contents=dict()):
 			'\n'.join('  {} = {}'.format(k,v) for k,v in
 				sorted(_default_rcs.viewitems(), key=op.itemgetter(0))) ))
 	if contents is None: contents = dict()
+	contents_rc = dict((k,v) for k,v in contents.viewitems() if is_rc_setting(k))
 
-	log.debug('Processing group {}'.format(name or '(root)'))
-	if name.endswith('_') or not contents\
-			or filter(lambda k: k.startswith('_') or is_rc_setting(k), contents):
+	log.debug(' -- Processing group {}'.format(name or '(root)'))
+
+	if name.endswith('_') or contents_rc\
+			or not contents or filter(lambda k: k.startswith('_'), contents):
 		name = name.rstrip('_')
-		contents = settings_inline(contents.viewitems())
+		for k in contents_rc: del contents[k] # don't process these as subgroups
+		contents_rc = settings_inline(contents_rc.viewitems())
+
+		if contents_rc:
+			log.debug('Detected rc settings for group, applying: {}'.format(contents_rc))
 
 		settings = _default_rcs.copy()
 		settings.update(
 			settings_inline(it.ifilter(
 				lambda v: not v[0].startswith('_'),
-				contents.viewitems() )) )
+				contents_rc.viewitems() )) )
 		settings = settings_dict(settings.viewitems())
 
 		for rc,settings in settings.viewitems():
@@ -219,7 +229,7 @@ def parse_cg(name='', contents=dict()):
 					classify(cg_path, pids)
 				_default_cg = name
 
-	else:
+	if contents: # can be leftovers after diff with contents_rc
 		for subname, contents in contents.viewitems():
 			parse_cg(join(name, subname), contents)
 
