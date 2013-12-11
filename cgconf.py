@@ -100,7 +100,8 @@ def configure(path, settings, perms):
 		log.debug('Default permissions: {}'.format(_default_perms))
 
 	perms = merge_perms(it.imap(parse_perms, perms), _default_perms)
-	log.debug('Setting permissions for {}: {}'.format(path, perms))
+	log.debug( 'Setting permissions for {}: {}'\
+		.format(path, ', '.join('{}:{}:{:o}'.format(*t) for t in perms)) )
 	if not optz.dry_run:
 		for node in it.ifilter(isfile, it.imap(
 				ft.partial(join, path), os.listdir(path) )):
@@ -114,7 +115,12 @@ def configure(path, settings, perms):
 	if not optz.dry_run:
 		for node, val in settings.viewitems():
 			val = interpret_val(val)
-			open(join(path, node), 'wb').write(b'{}\n'.format(val))
+			ctl_path = join(path, node)
+			ctl = open(ctl_path, 'wb')
+			ctl.write(b'{}\n'.format(val))
+			try: ctl.close()
+			except (IOError, OSError) as err:
+				log.error('Failed to apply parameter ({} = {}): {}'.format(ctl_path, val, err))
 
 
 def classify(cg_path, tasks):
