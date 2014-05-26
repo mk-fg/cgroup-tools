@@ -31,6 +31,7 @@ from glob import glob
 
 for tasks in glob(tasks.format(cgname))\
 		+ glob(tasks.format(cgname.replace('/', '.'))):
-	open(tasks, 'wb').write(b'\n'.format(os.getpid()))
+	with open(tasks, 'wb') as dst:
+		dst.write(b'{}\n'.format(os.getpid()))
 
 os.execvp(cmd[0], cmd)
