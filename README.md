@@ -81,7 +81,8 @@ And then something like `cgrc <tagged-name> <cmd> <args...>` to run anything
 inside these (can also be used in shebang with -s, with cmd from stdin, etc).
 
 Other tools allow waiting for threads within some cgroup to finish before
-proceeding (cgwait) and put stuff running there on hold easily (cgfreeze).
+proceeding (cgwait), put stuff running there on hold easily (cgfreeze) and run
+stuff in temp-cgroup, reporting accounting data for it afterwards (cgtime).
 
 cgconf and cgrc turn out to be surprisingly useful still, despite systemd adding
 knobs to control cgroup resource limits (but not all of them, and spread over
