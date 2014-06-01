@@ -27,6 +27,11 @@ if not cmd_pid:
 		cmd_r.close()
 		if not cmd: sys.exit(0) # parent pid failed
 		cg_paths, cmd = cmd[:-1], cmd[-1]
+		if cg_paths[-1] == '-': # "quiet" mark
+			cg_paths = cg_paths[:-1]
+			devnull = open(os.devnull, 'wb')
+			os.dup2(devnull.fileno(), sys.stdout.fileno())
+			os.dup2(devnull.fileno(), sys.stderr.fileno())
 		cmd = map(lambda arg: arg.decode('hex'), cmd.split('\0'))
 		assert cg_paths, cg_paths
 
@@ -117,6 +122,8 @@ def main(args=None):
 		default='cpuacct, blkio, memory', metavar='rc1[, rc2, ...]',
 		help='Comma-separated list of rc hierarchies to get metrics from (default: %(default)s).'
 			' Should have corresponding path mounted under {}.'.format(cg_root))
+	parser.add_argument('-q', '--quiet', action='store_true',
+		help='Redirect stderr/stdout for started pid to /dev/null.')
 	parser.add_argument('-d', '--debug', action='store_true', help='Verbose operation mode.')
 	opts = parser.parse_args(sys.argv[1:] if args is None else args)
 
@@ -136,8 +143,10 @@ def main(args=None):
 		cg_tasks[rc] = tasks
 
 	# Append cmdline, send data to child
-	data = '\n'.join( cg_tasks.values()
-		+ ['\0'.join(map(lambda arg: arg.encode('hex'), opts.cmdline))] )
+	data = cg_tasks.values()
+	if opts.quiet: data.append('-')
+	data = '\n'.join(it.chain( data,
+		['\0'.join(map(lambda arg: arg.encode('hex'), opts.cmdline))] ))
 	cmd_w.write(struct.pack(len_fmt, len(data)) + data)
 	cmd_w.flush()
 
