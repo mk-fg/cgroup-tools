@@ -19,6 +19,9 @@ cgroup hierarcy:
 
 	groups:
 
+	  # Must be applied to root cgroup
+	  memory.use_hierarchy: 1
+
 	  # base:
 	  #   _default: true # to put all pids here initially
 	  #   cpu.shares: 1000
@@ -30,6 +33,7 @@ cgroup hierarcy:
 	      cfs_period_us: 1_000_000
 
 	  tagged:
+
 	    cave:
 	      _tasks: root:paludisbuild
 	      _admin: root:paludisbuild
@@ -39,29 +43,38 @@ cgroup hierarcy:
 	        cfs_period_us: 250_000
 	      blkio.weight: 100
 	      memory.soft_limit_in_bytes: 2G
+
 	    desktop:
+
 	      roam:
 	        _tasks: root:users
 	        cpu.shares: 300
 	        blkio.weight: 300
-	        # memory.soft_limit_in_bytes: 2G
-	      java:
-	        _tasks: root:users
-	        cpu.shares: 100
-	        blkio.weight: 100
-	        memory.soft_limit_in_bytes: 1G
+	        memory.soft_limit_in_bytes: 2G
 
-(from laptop with [dying
-fan](http://blog.fraggod.net/2013/11/01/software-hacks-to-fix-broken-hardware-laptop-fan.html),
+	      de_misc:
+	        memory.soft_limit_in_bytes: 700M
+	        memory.limit_in_bytes: 1500M
+
+	    vm:
+	      quasi:
+	      misc:
+	        cpu.shares: 200
+	        blkio.weight: 100
+	        memory.soft_limit_in_bytes: 1200M
+	        memory.limit_in_bytes: 1500M
+
+
+(from laptop with [dying fan](http://blog.fraggod.net/2013/11/01/software-hacks-to-fix-broken-hardware-laptop-fan.html),
 hence cpu bandwidth limits)
 
-And then something like `cgrc <tagged-name> <cmd> <args...>` to run anything put
-inside these.
+And then something like `cgrc <tagged-name> <cmd> <args...>` to run anything
+inside these (can also be used in shebang with -s, with cmd from stdin, etc).
 
-Other tools allow waiting for one cgroup threads to finish before proceeding and
-put stuff running there on hold easily.
+Other tools allow waiting for threads within some cgroup to finish before
+proceeding (cgwait) and put stuff running there on hold easily (cgfreeze).
 
-cgconf and cgrc turn out to be surprisingly still useful despite systemd adding
+cgconf and cgrc turn out to be surprisingly useful still, despite systemd adding
 knobs to control cgroup resource limits (but not all of them, and spread over
 lot of small files, which are pain if you need a big picture of e.g. weights)
 and systemd-run, which hides i/o of whatever it runs in systemd slices.
@@ -70,5 +83,5 @@ and systemd-run, which hides i/o of whatever it runs in systemd slices.
 TODO
 --------------------
 
-* check out [peo3/cgroup-utils](https://github.com/peo3/cgroup-utils) and
-  whether I can rebase this stuff on top of it
+* Check out [peo3/cgroup-utils](https://github.com/peo3/cgroup-utils) and
+  whether I can rebase this stuff on top of it, maybe other similar projects.
