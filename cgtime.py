@@ -208,7 +208,8 @@ def main(args=None):
 				if t: label += '[{}]'.format(t)
 				acct[label] = num_format(int(v))
 
-	for k, v in acct.viewitems(): print('{}: {}'.format(k, v))
+	for k, v in acct.viewitems():
+		print('{}: {}'.format(k, v), file=sys.stderr)
 
 	# Cleanup tmp dirs
 	leftovers = set()
@@ -217,7 +218,8 @@ def main(args=None):
 		try: os.rmdir(tasks_dir)
 		except (OSError, IOError): leftovers.add(tasks_dir)
 	if leftovers:
-		print('Leftover cgroup dirs remaining:{}\n'.format('\n  '.join([''] + sorted(leftovers))))
+		print( 'Leftover cgroup dirs remaining:{}\n'\
+			.format('\n  '.join([''] + sorted(leftovers))), file=sys.stderr )
 		err = err or 1
 
 	return err
