@@ -56,15 +56,20 @@ def init_rc(rc, rc_path):
 def parse_perms(spec):
 	uid = gid = mode = None
 	if not spec: return uid, gid, mode
-	uid, spec = spec.split(':', 1)
+	try: uid, spec = spec.split(':', 1)
+	except ValueError: uid, spec = spec, None
 	if uid:
 		try: uid = int(uid)
 		except ValueError:
 			import pwd
 			uid = pwd.getpwnam(uid).pw_uid
-	try: gid, spec = spec.split(':', 1)
-	except ValueError: return uid, gid, mode
-	if gid:
+	if not gid:
+		if spec is None:
+			gid = pwd.getpwuid(uid).pw_gid
+		else:
+			try: gid, spec = spec.split(':', 1)
+			except ValueError: gid, spec = spec, None
+	if gid and not isinstance(gid, int):
 		try: gid = int(gid)
 		except ValueError:
 			import grp
@@ -144,6 +149,7 @@ def settings_inline(rc_dict):
 		if isinstance(settings, dict):
 			for k,v in settings.viewitems():
 				rc_inline['{}.{}'.format(rc, k)] = v
+			if not settings: rc_inline[rc] = dict()
 		elif settings is None: rc_inline[rc] = dict()
 		else: rc_inline[rc] = settings
 	return rc_inline

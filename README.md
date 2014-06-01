@@ -64,6 +64,15 @@ cgroup hierarcy:
 	        memory.soft_limit_in_bytes: 1200M
 	        memory.limit_in_bytes: 1500M
 
+	    bench:
+	      # Corresponding pw_gid will be used, if only uname/uid is specified
+	      _tasks: fraggod
+	      _admin: fraggod
+	      # These will be initialized as dirs with proper uid/gid, but no stuff applied there
+	      cpuacct:
+	      memory:
+	      blkio:
+
 
 (from laptop with [dying fan](http://blog.fraggod.net/2013/11/01/software-hacks-to-fix-broken-hardware-laptop-fan.html),
 hence cpu bandwidth limits)
