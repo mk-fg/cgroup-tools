@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function
+from __future__ import print_function
 
 # No argparser here - it's just not worth it.
 # Usage:
 #  cgrc -g group < cmd...
 #  cgrc -g group cmd...
 #  cgrc.group cmd...
+# If "group" starts with /, it won't be prefixed with "tagged/"
 
 cgname_tpl = 'tagged/{}' # template for cgroup path
 tasks = '/sys/fs/cgroup/*/{}/cgroup.procs' # path to resource controllers' pseudo-fs'es
@@ -25,13 +26,14 @@ else:
 	else: cgname, cmd = cmd[0], cmd[1:]
 	cmd = cmd_base + cmd
 
-cgname = cgname_tpl.format(cgname)
+cgname = cgname_tpl.format(cgname)\
+	if not cgname.startswith('/') else cgname.lstrip('/')
 
 from glob import glob
 
 for tasks in glob(tasks.format(cgname))\
 		+ glob(tasks.format(cgname.replace('/', '.'))):
 	with open(tasks, 'wb') as dst:
-		dst.write(b'{}\n'.format(os.getpid()))
+		dst.write('{}\n'.format(os.getpid()))
 
 os.execvp(cmd[0], cmd)
