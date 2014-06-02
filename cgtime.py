@@ -113,13 +113,13 @@ def main(args=None):
 	parser.add_argument('cmdline', nargs='+',
 		help='Command to run and any arguments for it.')
 	parser.add_argument('-g', '--cgroup',
-		default='bench', metavar='{ /path | tagged-path }',
+		default='bench/tmp', metavar='{ /path | tagged-path }',
 		help='Hierarchy path to create temp-cgroup under'
 				' ("/" means root cgroup, default: %(default)s).'
 			' Any missing path components will be created.'
 			' If relative name is specified, it will be interpreted from /tagged path.')
 	parser.add_argument('-c', '--rcs',
-		default='cpuacct, blkio, memory', metavar='rc1[, rc2, ...]',
+		default='cpuacct, blkio, memory', metavar='rc1[,rc2,...]',
 		help='Comma-separated list of rc hierarchies to get metrics from (default: %(default)s).'
 			' Should have corresponding path mounted under {}.'.format(cg_root))
 	parser.add_argument('-q', '--quiet', action='store_true',

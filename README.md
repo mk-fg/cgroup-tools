@@ -15,6 +15,7 @@ cgroup hierarcy:
 	defaults:
 	  _tasks: root:wheel:664
 	  _admin: root:wheel:644
+	  # _path: root:root:755 # won't be chown/chmod'ed, if unset
 	  freezer:
 
 	groups:
@@ -65,13 +66,21 @@ cgroup hierarcy:
 	        memory.limit_in_bytes: 1500M
 
 	    bench:
-	      # Corresponding pw_gid will be used, if only uname/uid is specified
-	      _tasks: fraggod
-	      _admin: fraggod
-	      # These will be initialized as dirs with proper uid/gid, but no stuff applied there
-	      cpuacct:
-	      memory:
-	      blkio:
+	      # Subdir for adhoc cgroups created by user
+	      tmp:
+	        # Corresponding pw_gid will be used, if only uname/uid is specified
+	        _tasks: fraggod
+	        _admin: fraggod
+	        _path: fraggod
+	        # These will be initialized as dirs with proper uid/gid, but no stuff applied there
+	        cpuacct:
+	        memory:
+	        blkio:
+	      # Limits that groups in tmp/ can't transcend
+	      cpu.shares: 500
+	      blkio.weight: 500
+	      memory.soft_limit_in_bytes: 300M
+	      memory.limit_in_bytes: 500M
 
 
 (from laptop with [dying fan](http://blog.fraggod.net/2013/11/01/software-hacks-to-fix-broken-hardware-laptop-fan.html),

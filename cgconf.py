@@ -81,8 +81,16 @@ def merge_perms(set1, set2):
 	return tuple(
 		tuple(
 			(val1 if val1 is not None else val2)
-				for val1, val2 in it.izip(sset1, sset2) )
-		for sset1, sset2 in it.izip(set1, set2) )
+				for val1, val2 in it.izip_longest(sset1, sset2, fillvalue=None) )
+		for sset1, sset2 in it.izip_longest(set1, set2, fillvalue=list()) )
+
+def format_perms(*pset):
+	pstrs = list()
+	for t in pset:
+		t = list(t)
+		if isinstance(t[2], int): t[2] = '{:o}'.format(t[2])
+		pstrs.append(':'.join(map(bytes, t)))
+	return ', '.join(pstrs)
 
 _units = dict( Ki=2**10, Mi=2**20,
 	Gi=2**30, K=1e3, M=1e6, G=1e9 )
@@ -97,17 +105,20 @@ def interpret_val(val):
 def configure(path, settings, perms):
 	global _default_perms
 	if _default_perms is None:
-		try: def_tasks = conf['defaults']['_tasks']
-		except KeyError: def_tasks = None
-		try: def_admin = conf['defaults']['_admin']
-		except KeyError: def_admin = None
-		_default_perms = tuple(it.imap(parse_perms, (def_tasks, def_admin)))
+		_default_perms = list()
+		for k in '_tasks', '_admin', '_path':
+			try: val = conf['defaults'][k]
+			except KeyError: val = None
+			_default_perms.append(parse_perms(val))
+		_default_perms = tuple(_default_perms)
 		log.debug('Default permissions: {}'.format(_default_perms))
 
-	perms = merge_perms(it.imap(parse_perms, perms), _default_perms)
-	log.debug( 'Setting permissions for {}: {}'\
-		.format(path, ', '.join('{}:{}:{:o}'.format(*t) for t in perms)) )
+	perms = merge_perms(map(parse_perms, perms), _default_perms)
+	log.debug('Setting permissions for {}: {}'.format(path, format_perms(perms)))
 	if not optz.dry_run:
+		if any(map(lambda n: n is not None, perms[2][:2])):
+			os.chown(path, *perms[2][:2])
+		if perms[2][2] is not None: os.chmod(path, perms[2][2])
 		for node in it.ifilter(isfile, it.imap(
 				ft.partial(join, path), os.listdir(path) )):
 			os.chown(node, *perms[1][:2])

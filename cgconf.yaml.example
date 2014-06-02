@@ -1,29 +1,71 @@
 path: /sys/fs/cgroup
 
 defaults:
-	_tasks: root:wheel:664
-	_admin: root:wheel:644
-	freezer:
+  _tasks: root:wheel:664
+  _admin: root:wheel:644
+  # _path: root:root:755 # won't be chown/chmod'ed, if unset
+  freezer:
 
 groups:
 
-	base:
-		_default: true
-		cpu.shares: 1000
-		blkio.weight: 1000
+  # Must be applied to root cgroup
+  memory.use_hierarchy: 1
 
-	tagged:
-		cave:
-			_tasks: root:paludisbuild
-			_admin: root:paludisbuild
-			cpu.shares: 100
-			blkio.weight: 100
-		desktop:
-			roam:
-				_tasks: root:users
-				cpu.shares: 300
-				blkio.weight: 300
-			java:
-				_tasks: root:users
-				cpu.shares: 100
-				blkio.weight: 100
+  # base:
+  #   _default: true # to put all pids here initially
+  #   cpu.shares: 1000
+  #   blkio.weight: 1000
+
+  user.slice:
+    cpu:
+      cfs_quota_us: 1_500_000
+      cfs_period_us: 1_000_000
+
+  tagged:
+
+    cave:
+      _tasks: root:paludisbuild
+      _admin: root:paludisbuild
+      cpu:
+        shares: 100
+        cfs_quota_us: 100_000
+        cfs_period_us: 250_000
+      blkio.weight: 100
+      memory.soft_limit_in_bytes: 2G
+
+    desktop:
+
+      roam:
+        _tasks: root:users
+        cpu.shares: 300
+        blkio.weight: 300
+        memory.soft_limit_in_bytes: 2G
+
+      de_misc:
+        memory.soft_limit_in_bytes: 700M
+        memory.limit_in_bytes: 1500M
+
+    vm:
+      quasi:
+      misc:
+        cpu.shares: 200
+        blkio.weight: 100
+        memory.soft_limit_in_bytes: 1200M
+        memory.limit_in_bytes: 1500M
+
+    bench:
+      # Subdir for adhoc cgroups created by user
+      tmp:
+        # Corresponding pw_gid will be used, if only uname/uid is specified
+        _tasks: fraggod
+        _admin: fraggod
+        _path: fraggod
+        # These will be initialized as dirs with proper uid/gid, but no stuff applied there
+        cpuacct:
+        memory:
+        blkio:
+      # Limits that groups in tmp/ can't transcend
+      cpu.shares: 500
+      blkio.weight: 500
+      memory.soft_limit_in_bytes: 300M
+      memory.limit_in_bytes: 500M
