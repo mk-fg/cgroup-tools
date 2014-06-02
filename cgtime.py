@@ -101,7 +101,7 @@ def dev_resolve( major, minor,
 		if dev_cached: dev_cached = dev_cached.replace('.', '_')
 		elif log_fails:
 			log.warn( 'Unable to resolve device'
-				' from major/minor numbers: {}:{}'.format(major, minor) )
+				' from major/minor numbers: %s:%s', major, minor )
 		return dev_cached or None
 
 def main(args=None):

@@ -24,11 +24,11 @@ _default_perms = _default_rcs = _default_cg = _mounts = None
 
 
 def init_rc(rc, rc_path):
-	log.debug('Initializing path for rc ({}): {}'.format(rc, rc_path))
+	log.debug('Initializing path for rc (%s): %r', rc, rc_path)
 
 	mkdir_chk = not isdir(rc_path)
 	if mkdir_chk:
-		log.debug('Creating rc path: {}'.format(rc_path))
+		log.debug('Creating rc path: %r', rc_path)
 		if not optz.dry_run: os.mkdir(rc_path)
 
 	global _mounts
@@ -37,19 +37,19 @@ def init_rc(rc, rc_path):
 			lambda line: (line[7] == 'cgroup')\
 					or (line[7] == '-' and line[8] == 'cgroup'),\
 			it.imap(op.methodcaller('split'), open('/proc/self/mountinfo')) )))
-		log.debug('Found mounts: {}'.format(_mounts))
+		log.debug('Found mounts: %s', _mounts)
 
 	if mkdir_chk or rc_path not in _mounts:
 		if os.path.islink(rc_path):
-			log.debug(( 'Symlink in place of rc-path (rc: {}),'
-				' skipping (assuming hack or joint mount): {}' ).format(rc, rc_path))
+			log.debug( 'Symlink in place of rc-path (rc: %s),'
+				' skipping (assuming hack or joint mount): %r', rc, rc_path )
 		else:
 			mount_cmd = 'mount', '-t', 'cgroup', '-o', rc, rc, rc_path
-			log.debug('Mounting rc path: {} ({})'.format(rc_path, ' '.join(mount_cmd)))
+			log.debug('Mounting rc path: %r (%s)', rc_path, ' '.join(mount_cmd))
 			if not optz.dry_run:
 				if Popen(mount_cmd).wait():
 					raise RuntimeError( 'Failed to mount'
-						' rc path: {}, command: {}'.format(rc_path, mount_cmd) )
+						' rc path: {!r}, command: {}'.format(rc_path, mount_cmd) )
 		_mounts.add(rc_path)
 
 
@@ -111,10 +111,10 @@ def configure(path, settings, perms):
 			except KeyError: val = None
 			_default_perms.append(parse_perms(val))
 		_default_perms = tuple(_default_perms)
-		log.debug('Default permissions: {}'.format(_default_perms))
+		log.debug('Default permissions: %s', _default_perms)
 
 	perms = merge_perms(map(parse_perms, perms), _default_perms)
-	log.debug('Setting permissions for {}: {}'.format(path, format_perms(perms)))
+	log.debug('Setting permissions for %r: %s', path, format_perms(perms))
 	if not optz.dry_run:
 		if any(map(lambda n: n is not None, perms[2][:2])):
 			os.chown(path, *perms[2][:2])
@@ -127,7 +127,7 @@ def configure(path, settings, perms):
 			os.chown(join(path, fn), *perms[0][:2])
 			os.chmod(join(path, fn), perms[0][2])
 
-	log.debug('Configuring {}: {}'.format(path, settings))
+	log.debug('Configuring %r: %s', path, settings)
 	if not optz.dry_run:
 		for node, val in settings.viewitems():
 			val = interpret_val(val)
@@ -136,7 +136,7 @@ def configure(path, settings, perms):
 			ctl.write(b'{}\n'.format(val))
 			try: ctl.close()
 			except (IOError, OSError) as err:
-				log.error('Failed to apply parameter ({} = {}): {}'.format(ctl_path, val, err))
+				log.error('Failed to apply parameter (%r = %r): %s', ctl_path, val, err)
 
 
 def classify(cg_path, tasks):
@@ -186,7 +186,7 @@ def path_for_rc(rc, name):
 
 def parse_cg(name='', contents=dict()):
 	if name and name.rsplit('/', 1)[-1].startswith('_'):
-		log.debug('Skipping special (prefixed) section: {}'.format(name))
+		log.debug('Skipping special (prefixed) section: %s', name)
 		return
 
 	global _default_rcs
@@ -194,13 +194,13 @@ def parse_cg(name='', contents=dict()):
 		_default_rcs = settings_inline(it.ifilter(
 			lambda v: not v[0].startswith('_'),
 			conf.get('defaults', dict()).viewitems() ))
-		log.debug('Default settings:\n{}'.format(
-			'\n'.join('  {} = {}'.format(k,v) for k,v in
-				sorted(_default_rcs.viewitems(), key=op.itemgetter(0))) ))
+		log.debug( 'Default settings:\n%s',
+			'\n'.join('  {!r} = {!r}'.format(k,v) for k,v in
+				sorted(_default_rcs.viewitems(), key=op.itemgetter(0))) )
 	if contents is None: contents = dict()
 	contents_rc = dict((k,v) for k,v in contents.viewitems() if is_rc_setting(k))
 
-	log.debug(' -- Processing group {}'.format(name or '(root)'))
+	log.debug(' -- Processing group %r', name or '(root)')
 
 	if name.endswith('_') or contents_rc\
 			or not contents or filter(lambda k: k.startswith('_'), contents):
@@ -209,7 +209,7 @@ def parse_cg(name='', contents=dict()):
 		contents_rc = settings_inline(contents_rc.viewitems())
 
 		if contents_rc:
-			log.debug('Detected rc settings for group, applying: {}'.format(contents_rc))
+			log.debug('Detected rc settings for group, applying: %s', contents_rc)
 
 		settings = _default_rcs.copy()
 		settings.update(
@@ -219,12 +219,12 @@ def parse_cg(name='', contents=dict()):
 		settings = settings_dict(settings.viewitems())
 
 		for rc,settings in settings.viewitems():
-			log.debug('Configuring {}: {} = {}'.format(name, rc, settings))
+			log.debug('Configuring %r: %s = %s', name, rc, settings)
 			rc_path, rc_name = join(conf['path'], rc), path_for_rc(rc, name)
 			init_rc(rc, rc_path)
 			cg_path = join(rc_path, rc_name)
 			if not isdir(cg_path):
-				log.debug('Creating cgroup path: {}'.format(cg_path))
+				log.debug('Creating cgroup path: %r', cg_path)
 				if not optz.dry_run:
 					cg_base = rc_path
 					for slug in rc_name.split('/'):
@@ -236,7 +236,7 @@ def parse_cg(name='', contents=dict()):
 				global _default_cg
 				if _default_cg is not None and _default_cg != name:
 					raise ValueError('There can be only one default cgroup')
-				log.debug('Populating default cgroup: {}'.format(cg_path))
+				log.debug('Populating default cgroup: %r', cg_path)
 				if not optz.dry_run:
 					read_pids = lambda path: (int(line.strip()) for line in open(join(path, 'cgroup.procs')))
 					pids = set( read_pids(rc_path)
