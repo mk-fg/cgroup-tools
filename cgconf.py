@@ -231,7 +231,7 @@ def parse_cg(name='', contents=dict()):
 						cg_base = join(cg_base, slug)
 						if not isdir(cg_base): os.mkdir(cg_base)
 			configure( cg_path, settings_for_rc(rc, settings),
-				(contents.get('_tasks', ''), contents.get('_admin', '')) )
+				(contents.get('_tasks', ''), contents.get('_admin', ''), contents.get('_path', '')) )
 			if contents.get('_default'):
 				global _default_cg
 				if _default_cg is not None and _default_cg != name:
