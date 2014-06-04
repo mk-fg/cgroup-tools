@@ -58,13 +58,13 @@ def parse_perms(spec):
 	if not spec: return uid, gid, mode
 	try: uid, spec = spec.split(':', 1)
 	except ValueError: uid, spec = spec, None
-	if uid:
-		try: uid = int(uid)
-		except ValueError:
-			import pwd
-			uid = pwd.getpwnam(uid).pw_uid
+	try: uid = int(uid)
+	except ValueError:
+		import pwd
+		uid = pwd.getpwnam(uid).pw_uid
 	if not gid:
 		if spec is None:
+			import pwd
 			gid = pwd.getpwuid(uid).pw_gid
 		else:
 			try: gid, spec = spec.split(':', 1)
