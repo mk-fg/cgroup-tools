@@ -68,10 +68,11 @@ cgroup hierarcy:
 	    bench:
 	      # Subdir for adhoc cgroups created by user
 	      tmp:
-	        # Corresponding pw_gid will be used, if only uname/uid is specified
-	        _tasks: fraggod
-	        _admin: fraggod
-	        _path: fraggod
+	        # Corresponding pw_gid will be used, if "user:" is specified
+	        # Specs like "user", ":group:770" or "::775" are all valid.
+	        _tasks: 'fraggod:'
+	        _admin: 'fraggod:'
+	        _path: 'fraggod:'
 	        # These will be initialized as dirs with proper uid/gid, but no stuff applied there
 	        cpuacct:
 	        memory:
