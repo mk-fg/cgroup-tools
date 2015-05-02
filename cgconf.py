@@ -272,7 +272,7 @@ def main(args=None):
 	logging.basicConfig(level=logging.DEBUG if optz.debug else logging.INFO)
 	log = logging.getLogger()
 
-	conf = yaml.load(open(optz.conf).read().replace('\t', '  '))
+	conf = yaml.safe_load(open(optz.conf).read().replace('\t', '  '))
 	parse_cg(contents=conf['groups'])
 
 if __name__ == '__main__': sys.exit(main())
