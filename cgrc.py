@@ -6,6 +6,7 @@ from __future__ import print_function
 # Usage:
 #  cgrc -g group < cmd...
 #  cgrc -g group cmd...
+#  cgrc -q group cmd...
 #  cgrc.group cmd...
 # If "group" starts with /, it won't be prefixed with "tagged/"
 
@@ -22,7 +23,11 @@ else:
 		if not sys.argv[1].startswith('-s ') else\
 			( ''.join(open(sys.argv[2]).readlines()[1:]).strip().split(),
 				sys.argv[1].split()[1:] + sys.argv[3:] )
-	if cmd[0] == '-g': cgname, cmd = cmd[1], cmd[2:]
+	if cmd[0] in ['-g', '-q']:
+		opt, cgname, cmd = cmd[0], cmd[1], cmd[2:]
+		if opt == '-q':
+			import subprocess
+			subprocess.check_call(['cgwait', '-e', cgname], close_fds=True)
 	else: cgname, cmd = cmd[0], cmd[1:]
 	cmd = cmd_base + cmd
 
