@@ -1,7 +1,7 @@
 cgroup-tools
 --------------------
 
-A set of tools to work with cgroup tree and processes classification/QoS,
+A set of tools to work with cgroup tree and process classification/QoS
 according to it.
 
 More (of a bit outdated) info can be found
@@ -100,8 +100,15 @@ lot of small files, which are pain if you need a big picture of e.g. weights)
 and systemd-run, which hides i/o of whatever it runs in systemd slices.
 
 
-TODO
+Links
 --------------------
 
-* Check out [peo3/cgroup-utils](https://github.com/peo3/cgroup-utils) and
-  whether I can rebase this stuff on top of it, maybe other similar projects.
+* systemd - has ton of useful stuff to both manage/count (see "man
+  systemd.resource-control") and check on (e.g. systemd-cgtop) resources used by
+  long-running services.
+
+* [peo3/cgroup-utils](https://github.com/peo3/cgroup-utils) - similar set of
+  misc useful stuff.
+
+* [benchexec](https://github.com/sosy-lab/benchexec) - super-useful thing for
+  using cgroups to benchmark multi-process things.
